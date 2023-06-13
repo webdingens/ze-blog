@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "prettier.prettierPath": "./node_modules/prettier",
+  "path-intellisense.mappings": {
+    "/": "${workspaceFolder}/public"
+  },
+  "[astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

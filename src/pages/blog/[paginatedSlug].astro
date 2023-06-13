@@ -1,0 +1,37 @@
+---
+import { CollectionEntry, getCollection } from "astro:content";
+
+import _ from "lodash";
+import BlogIndexPage from "../index.astro";
+import { ENTRIES_PER_PAGE } from "../../consts";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog", ({ data }) => {
+		// if not in DEV mode exclude draft
+		return import.meta.env.DEV || !data.draft;
+	});
+	posts.sort(
+		(a, b) =>
+			(b.data.updatedDate ?? b.data.pubDate).valueOf() -
+			(a.data.updatedDate ?? a.data.pubDate).valueOf()
+	);
+
+	const chunkedPosts = _.chunk(posts, ENTRIES_PER_PAGE);
+
+	return chunkedPosts.map((chunk, idx) => ({
+		params: { paginatedSlug: `page-${idx + 1}` },
+		props: {
+			page: idx + 1,
+			posts: chunk,
+			pages: Math.ceil(posts.length / ENTRIES_PER_PAGE),
+		},
+	}));
+}
+type Props = {
+	posts: CollectionEntry<"blog">[];
+	page: number;
+	pages: number;
+};
+---
+
+<BlogIndexPage {...Astro.props} />

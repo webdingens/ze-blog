@@ -1,0 +1,30 @@
+---
+import BaseHead from "../components/layout/BaseHead.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import "@fontsource/istok-web";
+import "@fontsource/istok-web/700.css";
+
+type Props = {
+	title: string;
+	description: string;
+};
+
+const { title, description } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<slot name="head-before" />
+		<BaseHead title={title} description={description} />
+		<slot name="head-after" />
+	</head>
+
+	<body>
+		<Header title={title} />
+		<main>
+			<slot />
+		</main>
+		<Footer />
+	</body>
+</html>

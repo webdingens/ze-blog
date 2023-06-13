@@ -1,50 +1,83 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { ENTRIES_PER_PAGE } from "../consts";
+import { CollectionEntry, getCollection } from "astro:content";
+import FormattedDate from "../components/FormattedDate.astro";
+import BasePage from "../layouts/BasePage.astro";
+
+const page = Astro.props?.page || 1;
+let posts =
+	Astro.props?.posts ||
+	(await getCollection("blog", ({ data }) => {
+		// if not in DEV mode exclude draft
+		return import.meta.env.DEV || !data.draft;
+	}));
+posts.sort(
+	(a, b) =>
+		(b.data.updatedDate ?? b.data.pubDate).valueOf() -
+		(a.data.updatedDate ?? a.data.pubDate).valueOf()
+);
+const pages = Astro.props?.pages || Math.ceil(posts.length / ENTRIES_PER_PAGE);
+posts = posts.slice(0, ENTRIES_PER_PAGE);
+
+const title = Astro.props?.title || `Blog entries page ${page}`;
+const description =
+	Astro.props?.description ||
+	`Paginated overview over blog entries, page ${page}`;
+
+type Props = {
+	posts?: CollectionEntry<"blog">[];
+	page?: number;
+	pages?: number;
+	title?: string;
+	description?: string;
+};
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header title={SITE_TITLE} />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/pages/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<BasePage title={title} description={description}>
+	<style slot="head-after">
+		ul {
+			list-style-type: none;
+			padding: unset;
+		}
+		ul li {
+			display: flex;
+			align-items: flex-start;
+		}
+		ul li + li {
+			margin-top: 0.5em;
+		}
+		ul li :global(time) {
+			flex: 0 0 130px;
+			font-style: italic;
+		}
+		ul li p {
+			margin: 0;
+		}
+	</style>
+	<section>
+		{page === 1 && <h2>Latest blog entries and changes</h2>}
+		<ul>
+			{
+				posts.map((post) => (
+					<li>
+						<FormattedDate date={post.data.pubDate} />
+						<div>
+							<a href={`/blog/${post.slug}/`}>{post.data.title}</a>
+							<p>{post.data.description}</p>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+
+		{
+			pages > 1 && (
+				<div class="pagination">
+					{page > 1 && <a href={`/blog/page-${page - 1}`}>Prev</a>}
+					<span>Page {page}</span>
+					{page < pages && <a href={`/blog/page-${page + 1}`}>Next</a>}
+				</div>
+			)
+		}
+	</section>
+</BasePage>

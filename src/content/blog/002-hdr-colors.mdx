@@ -1,0 +1,130 @@
+---
+title: "HDR Colors on the web? - Colors Part 1"
+description: "We can use HDR colors now! First steps into new color spaces."
+pubDate: "2023-06-12"
+updatedDate: "2023-06-13 22:06:15"
+---
+
+import { Picture } from "@astrojs/image/components";
+
+!Disclaimer: To fully appreciate this post a wide gamut display is required. You can find those advertised as DCI-P3 100%. Most are OLED displays at the time of writing. I will be using an `ASUS ZenScreen OLED MQ13AH`.
+
+## What are HDR colors
+
+Most human eyes have color receptors ([cones](https://en.wikipedia.org/wiki/Cone_cell)) that respond differently to red, green and blue light, enabling us to discern those colors. To generate images, displays have 3 LEDs per point or pixel (picture element) in red, green and blue. (The amount of points is defined by the display resolution).
+
+<figure>
+	<Picture
+		src={import("../../../public/assets/002-hdr-colors/calib_details.png")}
+		widths={[250, 300, 400, 540]}
+		aspectRatio={540 / 588}
+		sizes="(max-width: 50rem) 100vw, 50rem"
+		alt="Gamut graph showing two color coverages"
+		style="max-width:400px"
+	/>
+	<figcaption>
+		<strong>Fig.1</strong>: DCI-P3 vs. MQ13AH color coverage after calibration
+	</figcaption>
+</figure>
+
+In **Fig.1** you can see a chromaticity graph. Chromaticity is a color description, that stays the same no matter how bright or dark the color is (luminance). This is similiar to the HSL notation (hue, saturation, lightness), with a fixed L component. The whole colorful shape is the amount of colors a human could possibly perceive.
+
+There are two triangles displayed, which indicate the chromaticity coverage. The blue triangle is the DCI-P3 color space and the red triangle is my display after color correction (more about that later).
+
+The corners of the triangles have (from what I understand) the chromaticity of the LEDs in your display panel. Any color your display can create is a combination of those 3 colors and falls into the triangle.
+
+Now what are HDR colors? That is not a thing hehehe. We are actually talking about wide gamut colors, meaning a large coverage of that chromaticity graph. HDR is actually a bunch of standards, e.g. HDR10 or HDR400, describing the capabilities of the device, how well the LEDs can be turned off to generate really dark shadows, also the amount of colors, how bright the display can get, if it can display colors described by more than 8bit per point per channel. The colors are a part of that, but your device won't get HDR certified just for being able to display a wide gamut.
+
+Up till now most displays were able to display the sRGB gamut. The DCI-P3 triangle is 26% larger and is considered a wide gamut.
+
+But what do we get from that? Additional colors, that are more saturated! All colors from sRGB can still be displayed, but the corners of the triangle moved further to the most saturated color corners of the chromaticity graph.
+
+There is another color space that supercedes the DCI-P3 color space and is relevant for movies and high end TVs: the Rec.2020. Unless you have an expensive display for color grading movies you won't come into contact with that color space yet.
+
+## Where can I see or test the colors?
+
+To be able to pick a color and see, when the color is outside the sRGB color space and when it enters the P3 space, you need a color picker like [oklch.com](https://oklch.com/#60.71,0.228,252,100). You can display Rec. 2020 and the P3 color space, and there are threshold lines displayed, indicating the borders to the wide gamut. Also displayed is the fallback color, that is the closest less saturated color.
+
+oklch is a color space mapping that creates a color space, where given two colors with the same lightness value, if you increase both lightness values by the same amount, the resulting perceived lightness is the same ([article](https://evilmartians.com/chronicles/oklch-in-css-why-quit-rgb-hsl) linked on oklch.com).
+
+This makes changes to the color in your editor somewhat predictable. Or it is supposed to. The drawback is, that the borders of valid colors for your color space are not as easily predictable. If you want to outermost or most saturated color for DCI-P3 displays and only wander around the color space using values you might get lost.
+
+Another way to test the new colors is by using Chrome Dev Tools.
+
+<figure>
+	<Picture
+		src={import(
+			"../../../public/assets/002-hdr-colors/DevToolsWideGamutColorPicker.png"
+		)}
+		widths={[250, 300, 422]}
+		aspectRatio={422 / 537}
+		sizes="(max-width: 50rem) 100vw, 50rem"
+		alt="Chrome Dev Tools color picker with opened select menu for color description by value or with a function"
+		style="max-width:300px"
+	/>
+	<figcaption>
+		<strong>Fig.2</strong>: Chrome Dev Tools color picker
+	</figcaption>
+</figure>
+
+In **Fig.2** you can see the new color picker (if Chrome has detected you can view colors outside of the sRGB color space). One rectangle with different colors with varying lightness and saturation. There is a threshold line where you leave the sRGB color space.
+
+In the dropdown you can select one the new functions that can describe colors using varying color models, that are not limited to the sRGB color space. We have currently selected `oklch`, which is why it doesn't appear in the list.
+
+Please note the warning icons behind the already existing color values / functions, indicating the change of the described colors. By choosing the hex value you will automatically fall back to sRGB, since we can only describe colors in that space with hex values.
+
+## How do we use these colors?
+
+To progressively enhance current projects with your new highly saturated colors you can add them using `@supports` queries:
+
+```css
+@supports (color: oklch(100% 0 0)) {
+	.selector {
+		color: oklch(100% 0 0);
+	}
+}
+```
+
+If your browser doesn't understand the color value it will fall back to the initial color value. I've seen this being used and it fell back to white on Firefox:
+
+```css
+color: #123456;
+color: oklch(31.92% 0.072 251.17);
+```
+
+Another thing to look out for is to not use the [color-gamut media query](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/color-gamut):
+
+```css
+@media (color-gamut: p3) {
+	.selector {
+		background: color(display-p3 1 1 1);
+	}
+}
+```
+
+The color-gamut media query doesn't match on Firefox (v114, 2023-06-13, on my machine for an external monitor). Using @supports works.
+
+You can even add this to your SVG files:
+
+```html
+<svg>
+	<style>
+		.selector {
+			fill: red;
+		}
+		@supports (color: oklch(0.6 0.27 29.69)) {
+			.selector {
+				color: oklch(0.6 0.27 29.69);
+			}
+		}
+	</style>
+</svg>
+```
+
+This only works in browsers yet. You can use the svg as `<img>` source, inline or as favicon without problems. (Careful: style definitions in inline SVG files are applied globally, so namespace them with an id on the SVG file.)
+
+Inkscape 1.3 (vector graphics program) [will have](https://wiki.inkscape.org/wiki/Release_notes/1.3#Color_Pickers) a color picker option to pick wide gamut colors, but will export to hex colors only.
+
+## Outlook
+
+This will be part of a series. The next article will be about image formats, and how to create Avif files from raw image files.

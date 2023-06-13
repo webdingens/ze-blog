@@ -1,63 +1,70 @@
-/*
-  The CSS in this style tag is based off of Bear Blog's default CSS.
-  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
-  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
- */
+:root {
+	--c-0: #6E0300;
+	--c-1: #B83835;
+	--c-2: #4b3d3b;
+	--c-3: #480200;
+	--c-4: #250100;
+	--c-fg: #ffece9;
+	--c-acc: #e76065;
+}
+
 body {
-	font-family: Verdana, sans-serif;
+	font-family: 'Istok Web', sans-serif;
 	margin: auto;
 	padding: 20px;
-	max-width: 65ch;
+	max-width: 50rem;
 	text-align: left;
-	background-color: #fff;
+	background-color: var(--c-2);
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 	line-height: 1.5;
-	color: #444;
+	color: var(--c-fg);
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-strong,
-b {
-	color: #222;
-}
+
 a {
-	color: #3273dc;
+	color: var(--c-fg);
 }
+
 nav a {
 	margin-right: 10px;
 }
+
 textarea {
 	width: 100%;
 	font-size: 16px;
 }
+
 input {
 	font-size: 16px;
 }
+
 content {
 	line-height: 1.6;
 }
+
 table {
 	width: 100%;
 }
+
 img {
 	max-width: 100%;
 	height: auto;
 }
+
 code {
 	padding: 2px 5px;
-	background-color: #f2f2f2;
+	background-color: var(--c-acc);
 }
+
 pre {
 	padding: 1rem;
 }
-pre > code {
+
+pre>code {
 	all: unset;
+	tab-size: 4;
 }
+
 blockquote {
 	border: 1px solid #999;
 	color: #222;
